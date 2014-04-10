@@ -1,23 +1,20 @@
-int LED_Pins[] = {2, 3, 4, 5, 6, 7, 8, 9};
+#define count(array) (sizeof(array) / sizeof(*array))
 
-int tmp;
-
-int Old_LED = 0;
-
-int PotValue = 0;
+int analogInputPin = 0;
+int ledPins[] = {2, 3, 4, 5, 6, 7, 8, 9};
 
 void setup() {
-  for (tmp = 0; tmp < 8; tmp++) {
-    pinMode(LED_Pins[tmp], OUTPUT);
+  for (int i = 0; i < count(ledPins); i++) {
+    pinMode(ledPins[i], OUTPUT);
   }
 }
 
 void loop() {
-  PotValue = (analogRead(0) + 2) / 128;
-  for (tmp = 0; tmp < 8; tmp++) {
-    digitalWrite(LED_Pins[tmp], LOW);
+  int analogValue = (analogRead(analogInputPin) + 2) / 128;
+  for (int i = 0; i < count(ledPins); i++) {
+    digitalWrite(ledPins[i], LOW);
   }
-  for (tmp = 0; tmp < PotValue; tmp++) {
-    digitalWrite(LED_Pins[tmp], HIGH);
+  for (int i = 0; i < analogValue; i++) {
+    digitalWrite(ledPins[i], HIGH);
   }
 }
