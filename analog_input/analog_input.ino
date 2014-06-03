@@ -1,45 +1,101 @@
 #define count(array) (sizeof(array) / sizeof(*array))
 
-int analogInputPin = 0;
-int ledPins[] = {2, 3, 4, 5, 6, 7, 8, 9};
+int LED_PINS[] = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 
+#define ANALOG_INPUT_PIN A0
+#define MIN_VALUE_BUTTON_PIN 2
+#define MAX_VALUE_BUTTON_PIN 3
 #define NUM_SAMPLES 100
 #define SAMPLE_DELAY_MS 1
+#define MAIN_LOOP_DELAY_MS 10
+#define ANIMATION_DELAY_MS 50
 
-unsigned long sum = 0;
-unsigned char sampleCount = 0;
-int average = 0.0;
-int i = 0;
-int analogTreshold = 0;
+int minValue = 0;
+int maxValue = 1023;
 
 void setup() {
   analogReference(EXTERNAL);
+  
   Serial.begin(9600);
-  for (int i = 0; i < count(ledPins); i++) {
-    pinMode(ledPins[i], OUTPUT);
+  
+  pinMode(MIN_VALUE_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(MAX_VALUE_BUTTON_PIN, INPUT_PULLUP);
+  
+  for (int i = 0; i < count(LED_PINS); i++) {
+    pinMode(LED_PINS[i], OUTPUT);
   }
 }
 
-void loop() {
-  while (sampleCount < NUM_SAMPLES) {
-    sum += analogRead(analogInputPin);
-    sampleCount++;
+void enableNrOfLEDs(int numberOfEnabledLEDs) {
+  // Validate input
+  if (numberOfEnabledLEDs < 0) {
+    numberOfEnabledLEDs = 0;
+  } else if (numberOfEnabledLEDs > count(LED_PINS)) {
+    numberOfEnabledLEDs = count(LED_PINS);
+  }
+  
+  // Disable all LEDs
+  for (int i = 0; i < count(LED_PINS); i++) {
+    digitalWrite(LED_PINS[i], LOW);
+  }
+  
+  // Enable the requested number of LEDs
+  if (numberOfEnabledLEDs > 0) {
+    for (int i = 0; i < numberOfEnabledLEDs; i++) {
+      digitalWrite(LED_PINS[i], HIGH);
+    }
+  }
+}
+
+void animateLEDFlow() {
+  // Enable all of them in sequence
+  for (int i = 0; i < count(LED_PINS); i++) {
+    enableNrOfLEDs(i);
+    delay(ANIMATION_DELAY_MS);
+  }
+  
+  // Disable all of them in sequence
+  for (int i = 0; i < count(LED_PINS); i++) {
+    enableNrOfLEDs(10 - i);
+    delay(ANIMATION_DELAY_MS);
+  }
+}
+
+int readAverageAnalogValue() {
+  unsigned long sum = 0;
+  
+  for (int sampleCount = 0; sampleCount < NUM_SAMPLES; sampleCount++) {
+    sum += analogRead(ANALOG_INPUT_PIN);
     delay(SAMPLE_DELAY_MS);
   }
 
-  average = sum / NUM_SAMPLES;
-  sampleCount = 0;
-  sum = 0;
-  
-  Serial.print("A0 average = ");
+  int average = sum / NUM_SAMPLES;
+  return average;
+}
+
+void printMinMax() {
+  Serial.print("min, max = ");
+  Serial.print(minValue);
+  Serial.print(", ");
+  Serial.println(maxValue);
+  animateLEDFlow();
+}
+
+void loop() {
+  int average = readAverageAnalogValue();
+  Serial.print("average = ");
   Serial.println(average);
   
-  for (i = 0; i < count(ledPins); i++) {
-    digitalWrite(ledPins[i], LOW);
+  if (digitalRead(MIN_VALUE_BUTTON_PIN) == LOW) {
+    minValue = average;
+    printMinMax();
+  } else if (digitalRead(MAX_VALUE_BUTTON_PIN) == LOW) {
+    maxValue = average;
+    printMinMax();
+  } else {
+    int numberOfEnabledLEDs = 5;
+    enableNrOfLEDs(numberOfEnabledLEDs);
   }
   
-  analogTreshold = (average + 2) / 128;
-  for (i = 0; i < analogTreshold; i++) {
-    digitalWrite(ledPins[i], HIGH);
-  }
+  delay(MAIN_LOOP_DELAY_MS);
 }
