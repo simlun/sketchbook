@@ -5,13 +5,16 @@ int LED_PINS[] = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 #define ANALOG_INPUT_PIN A0
 #define MIN_VALUE_BUTTON_PIN 2
 #define MAX_VALUE_BUTTON_PIN 3
-#define NUM_SAMPLES 100
+#define NUM_SAMPLES 200
 #define SAMPLE_DELAY_MS 1
-#define MAIN_LOOP_DELAY_MS 10
+#define MAIN_LOOP_DELAY_MS 1
 #define ANIMATION_DELAY_MS 50
+#define CALIBRATION_MULTIPLIER 15
 
 int minValue = 0;
 int maxValue = 1023;
+
+unsigned long sum = 0;
 
 void setup() {
   analogReference(EXTERNAL);
@@ -61,15 +64,15 @@ void animateLEDFlow() {
   }
 }
 
-int readAverageAnalogValue() {
-  unsigned long sum = 0;
+int readAverageAnalogValue(int multiplier) {
+  sum = 0;
   
-  for (int sampleCount = 0; sampleCount < NUM_SAMPLES; sampleCount++) {
+  for (int sampleCount = 0; sampleCount < (NUM_SAMPLES * multiplier); sampleCount++) {
     sum += analogRead(ANALOG_INPUT_PIN);
     delay(SAMPLE_DELAY_MS);
   }
 
-  int average = sum / NUM_SAMPLES;
+  int average = sum / (NUM_SAMPLES * multiplier);
   return average;
 }
 
@@ -78,22 +81,40 @@ void printMinMax() {
   Serial.print(minValue);
   Serial.print(", ");
   Serial.println(maxValue);
-  animateLEDFlow();
+}
+
+int calculateNrOfLeds(int average) {
+  int span = maxValue - minValue;
+  int delta = average - minValue;
+  float percentage = (float)delta / (float)span;
+  
+  // Hack to act steady at limits
+  int offset = 1;
+  if (percentage > 0.85) {
+    percentage = 1.0;
+  } else if (percentage < 0.15) {
+    percentage = 0.0;
+    offset = 0;
+  }
+  
+  int numLeds = (percentage * (float)count(LED_PINS)) + offset;
+  return numLeds;
 }
 
 void loop() {
-  int average = readAverageAnalogValue();
-  Serial.print("average = ");
-  Serial.println(average);
-  
   if (digitalRead(MIN_VALUE_BUTTON_PIN) == LOW) {
-    minValue = average;
+    enableNrOfLEDs(0);
+    minValue = readAverageAnalogValue(CALIBRATION_MULTIPLIER);
     printMinMax();
+    animateLEDFlow();
   } else if (digitalRead(MAX_VALUE_BUTTON_PIN) == LOW) {
-    maxValue = average;
+    enableNrOfLEDs(0);
+    maxValue = readAverageAnalogValue(CALIBRATION_MULTIPLIER);
     printMinMax();
+    animateLEDFlow();
   } else {
-    int numberOfEnabledLEDs = 5;
+    int average = readAverageAnalogValue(1);
+    int numberOfEnabledLEDs = calculateNrOfLeds(average);
     enableNrOfLEDs(numberOfEnabledLEDs);
   }
   
