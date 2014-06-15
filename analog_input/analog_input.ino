@@ -5,16 +5,20 @@ int LED_PINS[] = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 #define ANALOG_INPUT_PIN A0
 #define MIN_VALUE_BUTTON_PIN 2
 #define MAX_VALUE_BUTTON_PIN 3
-#define NUM_SAMPLES 200
-#define SAMPLE_DELAY_MS 1
-#define MAIN_LOOP_DELAY_MS 1
-#define ANIMATION_DELAY_MS 50
-#define CALIBRATION_MULTIPLIER 15
 
-int minValue = 0;
+#define NUM_SAMPLES 200
+#define SAMPLE_DELAY_MS 2
+
+#define ANIMATION_DELAY_MS 50
+#define CALIBRATION_MULTIPLIER 1
+
+int minValue = 333;
 int maxValue = 1023;
 
 unsigned long sum = 0;
+
+unsigned long now = 0;
+unsigned long lastPrinted = 0;
 
 void setup() {
   analogReference(EXTERNAL);
@@ -88,20 +92,21 @@ int calculateNrOfLeds(int average) {
   int delta = average - minValue;
   float percentage = (float)delta / (float)span;
   
-  // Hack to act steady at limits
-  int offset = 1;
-  if (percentage > 0.85) {
-    percentage = 1.0;
-  } else if (percentage < 0.15) {
-    percentage = 0.0;
-    offset = 0;
-  }
-  
+  float offset = 1.5;
   int numLeds = (percentage * (float)count(LED_PINS)) + offset;
   return numLeds;
 }
 
+void printEvery(unsigned long interval, String message) {
+  if (lastPrinted + interval < now) {
+    lastPrinted = now;
+    Serial.println(message);
+  }
+}
+
 void loop() {
+  now = millis();
+  
   if (digitalRead(MIN_VALUE_BUTTON_PIN) == LOW) {
     enableNrOfLEDs(0);
     minValue = readAverageAnalogValue(CALIBRATION_MULTIPLIER);
@@ -116,7 +121,6 @@ void loop() {
     int average = readAverageAnalogValue(1);
     int numberOfEnabledLEDs = calculateNrOfLeds(average);
     enableNrOfLEDs(numberOfEnabledLEDs);
+    printEvery(1000, String("A0 = ")  + String(average));
   }
-  
-  delay(MAIN_LOOP_DELAY_MS);
 }
