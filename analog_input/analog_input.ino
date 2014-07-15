@@ -2,7 +2,7 @@
 
 int LED_PINS[] = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 
-#define ANALOG_INPUT_PIN A0
+#define ANALOG_INPUT_PIN A4
 #define MIN_VALUE_BUTTON_PIN 2
 #define MAX_VALUE_BUTTON_PIN 3
 
