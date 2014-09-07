@@ -131,7 +131,9 @@ void loop() {
                    + String("maxTreshold=") + String(maxValue)
                    + String("&")
                    + String("numberOfEnabledLEDs=")  + String(numberOfEnabledLEDs)
-                   + String("&") 
-                   + String("analogValue=")  + String(average));
+                   + String("&")
+                   + String("analogValue=") + String(analogRead(ANALOG_INPUT_PIN))
+                   + String("&")
+                   + String("average=")  + String(average));
   }
 }
