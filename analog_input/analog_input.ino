@@ -115,19 +115,23 @@ void loop() {
   if (digitalRead(MIN_VALUE_BUTTON_PIN) == LOW) {
     enableNrOfLEDs(0);
     minValue = readAverageAnalogValue(CALIBRATION_MULTIPLIER);
-    printMinMax();
+    //printMinMax();
     animateLEDFlow();
   } else if (digitalRead(MAX_VALUE_BUTTON_PIN) == LOW) {
     enableNrOfLEDs(0);
     maxValue = readAverageAnalogValue(CALIBRATION_MULTIPLIER);
-    printMinMax();
+    //printMinMax();
     animateLEDFlow();
   } else {
     int average = readAverageAnalogValue(1);
     int numberOfEnabledLEDs = calculateNrOfLeds(average);
     enableNrOfLEDs(numberOfEnabledLEDs);
-    printEvery(1000, String("numberOfEnabledLEDs=")  + String(numberOfEnabledLEDs)
-                   + String("\n") 
+    printEvery(1000, String("minTreshold=") + String(minValue)
+                   + String("&")
+                   + String("maxTreshold=") + String(maxValue)
+                   + String("&")
+                   + String("numberOfEnabledLEDs=")  + String(numberOfEnabledLEDs)
+                   + String("&") 
                    + String("analogValue=")  + String(average));
   }
 }
