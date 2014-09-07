@@ -107,6 +107,11 @@ void printEvery(unsigned long interval, String message) {
 void loop() {
   now = millis();
   
+  // Handle millis() overflow every 50 days
+  if (now < lastPrinted) {
+    lastPrinted = 0;
+  }
+  
   if (digitalRead(MIN_VALUE_BUTTON_PIN) == LOW) {
     enableNrOfLEDs(0);
     minValue = readAverageAnalogValue(CALIBRATION_MULTIPLIER);
