@@ -81,9 +81,9 @@ int readAverageAnalogValue(int multiplier) {
 }
 
 void printMinMax() {
-  Serial.print("min, max = ");
+  Serial.print("minTreshold=");
   Serial.print(minValue);
-  Serial.print(", ");
+  Serial.print("&maxTreshold=");
   Serial.println(maxValue);
 }
 
@@ -121,6 +121,8 @@ void loop() {
     int average = readAverageAnalogValue(1);
     int numberOfEnabledLEDs = calculateNrOfLeds(average);
     enableNrOfLEDs(numberOfEnabledLEDs);
-    printEvery(1000, String("A0 = ")  + String(average));
+    printEvery(1000, String("numberOfEnabledLEDs=")  + String(numberOfEnabledLEDs)
+                   + String("\n") 
+                   + String("analogValue=")  + String(average));
   }
 }
